@@ -1,2 +1,4 @@
-﻿// Console.WriteLine("Hello, World!");
-SetWindowPos.Hi();
+﻿using Native;
+
+//Console.WriteLine("Hello, World!");
+Native.NativeWindowPos.Hi();
