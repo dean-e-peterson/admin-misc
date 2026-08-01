@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace Native
 {
@@ -15,25 +16,43 @@ namespace Native
         public const int TH32CS_SNAPPROCESS = 0x00000002;
         public const long INVALID_HANDLE_VALUE = -1;
 
-        // error SYSLIB1051: The type 'Native.NativeProcesses.PROCESSENTRY32' is not supported by source-generated P/Invokes. The generated source will not handle marshalling of parameter 'lppe'. (https://learn.microsoft.com/dotnet/fundamentals/syslib-diagnostics/syslib1051)
-        // [StructLayout(LayoutKind.Sequential)]
-        // public struct PROCESSENTRY32
-        // {
-        //     public uint dwSize;
-        //     public uint cntUsage;
-        //     public uint th32ProcessID;
-        //     public UIntPtr th32DefaultHeapID;
-        //     public uint th32ModuleID;
-        //     public uint cntThreads;
-        //     public uint th32ParentProcessID;
-        //     public int pcPriClassBase;
-        //     public uint dwFlags;
-        //     [MarshalAs(UnmanagedType.ByValTStr, SizeConst=260)] public string szExeFile;
-        // }
-        // public const int MAX_PATH = 260;
-        //
-        // [LibraryImport("Kernel32.dll", SetLastError = true)]
-        // [return: MarshalAs(UnmanagedType.Bool)]
-        // public static partial bool Process32First(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+        // Functions accepting structures like PROCESSENTRY32 either require an unsafe fixed char[]
+        // in the PROCESSENTRY32 declaration so the LibraryImport attribute AOT marshaller can deal
+        // with it, or the functions using PROCESSENTRY32 must use the DllImport attribute and the
+        // runtime marshaller.  Otherwise you get a build error:
+        // error SYSLIB1051: The type 'Native.NativeProcesses.PROCESSENTRY32' is not supported by
+        // source-generated P/Invokes. The generated source will not handle marshalling of parameter 'lppe'.
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct PROCESSENTRY32
+        {
+            public uint dwSize;
+            public uint cntUsage;
+            public uint th32ProcessID;
+            public IntPtr th32DefaultHeapID;
+            public uint th32ModuleID;
+            public uint cntThreads;
+            public uint th32ParentProcessID;
+            public int pcPriClassBase;
+            public uint dwFlags;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst=MAX_PATH)]
+            public string szExeFile;
+
+            // Factory suggested by DeepSeek
+            public static PROCESSENTRY32 Create()
+            {
+                return new PROCESSENTRY32() {
+                    dwSize = (uint)Marshal.SizeOf<PROCESSENTRY32>(),
+                    szExeFile = String.Empty, // Avoid declaring it nullable.
+                };
+            }
+        }
+
+        public const int MAX_PATH = 260;
+        
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern bool Process32First(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
     }
 }
