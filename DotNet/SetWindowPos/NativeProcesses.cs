@@ -22,8 +22,8 @@ namespace Native
         // runtime marshaller.  Otherwise you get a build error:
         // error SYSLIB1051: The type 'Native.NativeProcesses.PROCESSENTRY32' is not supported by
         // source-generated P/Invokes. The generated source will not handle marshalling of parameter 'lppe'.
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public struct PROCESSENTRY32
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct PROCESSENTRY32W
         {
             public uint dwSize;
             public uint cntUsage;
@@ -38,10 +38,10 @@ namespace Native
             public string szExeFile;
 
             // Factory suggested by DeepSeek
-            public static PROCESSENTRY32 Create()
+            public static PROCESSENTRY32W Create()
             {
-                return new PROCESSENTRY32() {
-                    dwSize = (uint)Marshal.SizeOf<PROCESSENTRY32>(),
+                return new PROCESSENTRY32W() {
+                    dwSize = (uint)Marshal.SizeOf<PROCESSENTRY32W>(),
                     szExeFile = String.Empty, // Avoid declaring it nullable.
                 };
             }
@@ -50,9 +50,11 @@ namespace Native
         public const int MAX_PATH = 260;
         
         [DllImport("Kernel32.dll", SetLastError = true)]
-        public static extern bool Process32First(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool Process32FirstW(IntPtr hSnapshot, ref PROCESSENTRY32W lppe);
 
         [DllImport("Kernel32.dll", SetLastError = true)]
-        public static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool Process32NextW(IntPtr hSnapshot, ref PROCESSENTRY32W lppe);
     }
 }
