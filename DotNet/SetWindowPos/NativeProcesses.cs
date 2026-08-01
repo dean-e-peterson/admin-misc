@@ -56,5 +56,67 @@ namespace Native
         [DllImport("Kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool Process32NextW(IntPtr hSnapshot, ref PROCESSENTRY32W lppe);
+
+        // https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
+        public const int ERROR_NO_MORE_FILES = 0x12;
+
+        public static void TestListProcesses()
+        {
+            int lastError;
+
+            IntPtr hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+            if (hSnapshot == INVALID_HANDLE_VALUE)
+            {
+                lastError = Marshal.GetLastPInvokeError();
+                throw new Exception($"Error {lastError} calling CreateToolhelp32Snapshot(): " + Marshal.GetPInvokeErrorMessage(lastError));
+            }
+
+            try
+            {
+                PROCESSENTRY32W lppe = PROCESSENTRY32W.Create();
+
+                if (!Process32FirstW(hSnapshot, ref lppe))
+                {
+                    lastError = Marshal.GetLastPInvokeError();
+                    if (lastError == ERROR_NO_MORE_FILES)
+                    {
+                        Console.WriteLine("No processes at all?  Odd.");
+                    }
+                    else
+                    {
+                        throw new Exception($"Error {lastError} calling Process32FirstW(): " + Marshal.GetPInvokeErrorMessage(lastError));
+                    }
+                }
+
+                do
+                {
+                    ProcessProcessEntry(lppe);
+                }
+                while (Process32NextW(hSnapshot, ref lppe));
+
+                lastError = Marshal.GetLastPInvokeError();
+                if (lastError == ERROR_NO_MORE_FILES)
+                {
+                    Console.WriteLine("No more processes.  Cool.");
+                }
+                else
+                {
+                    throw new Exception($"Error {lastError} calling Process32NextW(): " + Marshal.GetPInvokeErrorMessage(lastError));
+                }
+
+            }
+            finally
+            {
+                if (!CloseHandle(hSnapshot))
+                {
+                    throw new Exception("Exception calling CloseHandle(): " + Marshal.GetPInvokeErrorMessage(Marshal.GetLastPInvokeError()));
+                }
+            }
+        }
+
+        private static void ProcessProcessEntry(PROCESSENTRY32W entry)
+        {
+            Console.WriteLine($"Process id [{entry.th32ProcessID}], name {entry.szExeFile}");
+        }
     }
 }
