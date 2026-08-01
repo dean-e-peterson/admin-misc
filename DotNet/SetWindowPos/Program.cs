@@ -1,23 +1,36 @@
-﻿// using Native;
-using System.Diagnostics;
-// using System.Collections.Generic;
+﻿using System.Diagnostics;
+using Native;
 
-// Console.WriteLine("Hello, World!");
-// NativeWindowPos.Hi();
-// NativeProcesses.TestListProcesses();
+namespace SetWindowPos;
 
-foreach (Process process in Process.GetProcessesByName("Explorer"))
+class Program
 {
-    Console.WriteLine($"[{process.Id}] {process?.MainModule?.ModuleName}");
-    if (process == null)
+    static void Main(string[] args)
     {
-        throw new Exception("Huh?");
-    }
-    foreach (ProcessThread thread in process.Threads)
-    {
-        using (thread)
+        // NativeWindowPos.Hi();
+        // NativeProcesses.TestListProcesses();
+
+        foreach (Process process in Process.GetProcessesByName("Explorer"))
         {
-            Console.WriteLine($"  ({thread.Id})");
+            Console.WriteLine($"Process [{process.Id}] {process?.MainModule?.ModuleName}");
+            if (process == null)
+            {
+                throw new Exception("Huh?");
+            }
+            foreach (ProcessThread thread in process.Threads)
+            {
+                using (thread)
+                {
+                    Console.WriteLine($"  Thread [{thread.Id}]");
+                    NativeWindowPos.EnumThreadWindows((uint)thread.Id, EnumThreadWndProc, IntPtr.Zero);
+                }
+            }
         }
+    }
+
+    static bool EnumThreadWndProc(IntPtr hwnd, IntPtr lParam)
+    {
+        Console.WriteLine($"    Window [hwnd: {hwnd}], lParam {lParam})");
+        return true;
     }
 }

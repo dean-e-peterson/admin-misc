@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace Native
 {
@@ -19,12 +20,18 @@ namespace Native
         [return: MarshalAs(UnmanagedType.Bool)]
         public static partial bool GetWindowRect(IntPtr hWnd, out Rect lpRect);
 
-        // ####
-        // BOOL EnumThreadWindows(
-        //     uint dwThreadId,
-        //     WNDENUMPROC lpfn,
-        //     short lParam
-        // );
+        [LibraryImport("User32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static partial bool EnumThreadWindows(uint dwThreadId, EnumThreadWndProc lpfn, IntPtr lParam);
+
+        // [return: MarshalAs(UnmanagedType.Bool)]
+        public delegate bool EnumThreadWndProc(IntPtr hwnd, IntPtr lParam);
+
+        public static bool Test_EnumThreadWndProc(IntPtr hwnd, IntPtr lParam)
+        {
+            Console.WriteLine($"{hwnd}: {lParam}");
+            return true;
+        }
 
         public static void Hi()
         {
