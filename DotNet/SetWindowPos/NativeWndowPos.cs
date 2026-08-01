@@ -19,6 +19,13 @@ namespace Native
         [return: MarshalAs(UnmanagedType.Bool)]
         public static partial bool GetWindowRect(IntPtr hWnd, out Rect lpRect);
 
+        // ####
+        // BOOL EnumThreadWindows(
+        //     uint dwThreadId,
+        //     WNDENUMPROC lpfn,
+        //     short lParam
+        // );
+
         public static void Hi()
         {
             Console.WriteLine("Hi");

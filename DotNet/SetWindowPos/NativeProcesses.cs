@@ -14,6 +14,7 @@ namespace Native
         [LibraryImport("Kernel32.dll", SetLastError = true)]
         public static partial IntPtr CreateToolhelp32Snapshot(uint dwFlags, uint th32ProcessID);
         public const int TH32CS_SNAPPROCESS = 0x00000002;
+        // public const int TH32CS_SNAPTHREAD = 0x00000004;
         public const long INVALID_HANDLE_VALUE = -1;
 
         // Functions accepting structures like PROCESSENTRY32 either require an unsafe fixed char[]
@@ -46,6 +47,26 @@ namespace Native
                 };
             }
         }
+
+        // [StructLayout(LayoutKind.Sequential)]
+        // public struct THREADENTRY32 {
+        //     uint dwSize;
+        //     uint cntUsage;
+        //     uint th32ThreadID;
+        //     uint th32OwnerProcessID;
+        //     int tpBasePri;
+        //     int tpDeltaPri;
+        //     uint dwFlags;
+        //
+        //     public static THREADENTRY32 Create()
+        //     {
+        //         return new THREADENTRY32
+        //         {
+        //             dwSize = (uint)Marshal.SizeOf<THREADENTRY32>();
+        //
+        //         };
+        //     }
+        // }
 
         public const int MAX_PATH = 260;
         
