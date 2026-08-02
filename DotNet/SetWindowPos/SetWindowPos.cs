@@ -33,7 +33,7 @@ namespace Native
             if (!SetWindowPos(hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags))
             {
                 int lastError = Marshal.GetLastPInvokeError();
-                throw new Exception($"Error {lastError} calling SetWindowPos(): " + Marshal.GetPInvokeErrorMessage(lastError));
+                throw new Exception("Error " + lastError + " calling SetWindowPos(): " + Marshal.GetPInvokeErrorMessage(lastError));
             }
         }
     }
